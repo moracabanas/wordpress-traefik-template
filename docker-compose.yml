@@ -1,0 +1,74 @@
+version: '3.3'
+services:
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: exampledb
+      MYSQL_PASSWORD_FILE: /run/secrets/db-pass
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+      MYSQL_USER: morac
+    volumes:
+     - db:/var/lib/mysql
+    networks:
+     - mariadb
+    secrets:
+     -
+      source: wordpress_db-pass
+      target: db-pass
+    logging:
+      driver: json-file
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+         - node.role == manager
+  wordpress:
+    image: wordpress:latest
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: exampledb
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/db-pass
+      WORDPRESS_DB_USER: morac
+    volumes:
+     - wordpress:/var/www/html
+    networks:
+     - traefik-public
+     - mariadb
+    secrets:
+     -
+      source: wordpress_db-pass
+      target: db-pass
+    logging:
+      driver: json-file
+    deploy:
+      labels:
+        traefik.http.routers.wordpress-https.rule: Host(`wordpress.maximal-systems.com`)
+        traefik.http.routers.wordpress-https.tls.certresolver: le
+        traefik.http.routers.wordpress-https.entrypoints: https
+        traefik.http.routers.wordpress-https.tls: 'true'
+        traefik.http.routers.wordpress-http.middlewares: https-redirect
+        traefik.http.routers.wordpress-http.rule: Host(`wordpress.maximal-systems.com`)
+        traefik.constraint-label: traefik-public
+        traefik.http.services.wordpress.loadbalancer.server.port: '80'
+        traefik.http.routers.wordpress-http.entrypoints: http
+        traefik.docker.network: traefik-public
+        traefik.enable: 'true'
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+networks:
+  mariadb:
+    driver: overlay
+  traefik-public:
+    external: true
+volumes:
+  db:
+    driver: local
+  wordpress:
+    driver: local
+secrets:
+  wordpress_db-pass:
+    external: true
