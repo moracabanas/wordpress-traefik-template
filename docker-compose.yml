@@ -3,8 +3,7 @@ services:
   db:
     image: mysql:5.7
     environment:
-      MYSQL_DATABASE: exampledb
-      MYSQL_PASSWORD_FILE: /run/secrets/db-pass
+      MYSQL_PASSWORD_FILE: /run/secrets/DB_PASS
       MYSQL_RANDOM_ROOT_PASSWORD: '1'
       MYSQL_USER: morac
     volumes:
@@ -27,9 +26,7 @@ services:
     image: wordpress:latest
     environment:
       WORDPRESS_DB_HOST: db
-      WORDPRESS_DB_NAME: exampledb
-      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/db-pass
-      WORDPRESS_DB_USER: morac
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/DB_PASS
     volumes:
      - wordpress:/var/www/html
     networks:
@@ -70,5 +67,5 @@ volumes:
   wordpress:
     driver: local
 secrets:
-  wordpress_db-pass:
-    external: true
+  DB_PASS:
+    file: ./.secrets/DB_PASS.secret
