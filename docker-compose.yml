@@ -11,9 +11,7 @@ services:
     networks:
      - mariadb
     secrets:
-     -
-      source: wordpress_db-pass
-      target: db-pass
+     - DB_PASS
     logging:
       driver: json-file
     deploy:
@@ -33,9 +31,7 @@ services:
      - traefik-public
      - mariadb
     secrets:
-     -
-      source: wordpress_db-pass
-      target: db-pass
+     - DB_PASS
     logging:
       driver: json-file
     deploy:
