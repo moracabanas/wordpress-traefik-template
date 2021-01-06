@@ -3,11 +3,12 @@ services:
   db:
     image: mysql:5.7
     environment:
+      MYSQL_DATABASE: ${DATABASE_NAME}
       MYSQL_PASSWORD_FILE: /run/secrets/DB_PASS
       MYSQL_RANDOM_ROOT_PASSWORD: '1'
-      MYSQL_USER: morac
+      MYSQL_USER: ${DATABASE_USER}
     volumes:
-     - db:/var/lib/mysql
+     - db_data:/var/lib/mysql
     networks:
      - mariadb
     secrets:
@@ -24,9 +25,11 @@ services:
     image: wordpress:latest
     environment:
       WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: ${DATABASE_NAME}
       WORDPRESS_DB_PASSWORD_FILE: /run/secrets/DB_PASS
+      WORDPRESS_DB_USER: ${DATABASE_USER}
     volumes:
-     - wordpress:/var/www/html
+     - wordpress_files:/var/www/html
     networks:
      - traefik-public
      - mariadb
@@ -53,15 +56,16 @@ services:
         delay: 10s
       restart_policy:
         condition: on-failure
+
 networks:
   mariadb:
     driver: overlay
   traefik-public:
     external: true
 volumes:
-  db:
+  db_data:
     driver: local
-  wordpress:
+  wordpress_files:
     driver: local
 secrets:
   DB_PASS:
